@@ -1,4 +1,4 @@
-name: Smart Review Revoker
+name: Smart Review Revoker | PR
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
@@ -7,30 +7,13 @@ concurrency:
 run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }}
 
 on:
-  pull_request_review:
-    types: [submitted]
   pull_request:
     branches:
       - main
 
 jobs:
-  save-pr-approved-commit-sha:
-    if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
-    runs-on: ubuntu-latest
-    name: Save PR Approved Commit SHA
-    steps:
-      - shell: bash
-        run: |
-          echo ${{ github.event.review.commit_id }} > approved-commit-id.txt
-      - name: Upload Commit ID
-        uses: actions/upload-artifact@v3
-        with:
-          name: approved-commit-id
-          path: approved-commit-id.txt
-          if-no-files-found: error
 
   check-if-pr-commit-is-dirty:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: Print all commits
     steps:
@@ -39,8 +22,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow_conclusion: success
-          pr: ${{github.event.pull_request.number}}
-          name: approved-commit-id
+          search_artifacts: true
+          name: approved-commit-id-${{github.event.pull_request.number}}
           if_no_artifact_found: warn
       # - name: Download Previously Approved Commit ID
       #   uses: actions/download-artifact@v3
