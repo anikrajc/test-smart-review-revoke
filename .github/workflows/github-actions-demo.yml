@@ -34,10 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     name: Print all commits
     steps:
-      - name: Download Previously Approved Commit ID
-        uses: actions/download-artifact@v3
-        with:
-          name: approved-commit-id
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        workflow_conclusion: success
+        pr: ${{github.event.pull_request.number}}
+        name: approved-commit-id
+        if_no_artifact_found: warn
+      # - name: Download Previously Approved Commit ID
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: approved-commit-id
       - shell: bash
         run: |
           value=`cat approved-commit-id.txt`
@@ -49,7 +56,7 @@ jobs:
         run: |
           echo "head_ref: ${{ github.head_ref }}"
           echo "Sha: ${{ github.sha }}"
-          echo "Sha: ${{ github.sha }}"
+          echo "PR head Sha: ${{ github.event.pull_request.head.sha }}"
 
 
 
