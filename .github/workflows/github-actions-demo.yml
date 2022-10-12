@@ -24,6 +24,7 @@ jobs:
         run: |
           echo "head_ref: ${{ github.head_ref }}"
           echo "Sha: ${{ github.sha }}"
+          echo "Commit ID: ${{ github.event.review.commit_id }}"
     # name: Save PR Approved Commit SHA
     # steps:
     #   - shell: bash
