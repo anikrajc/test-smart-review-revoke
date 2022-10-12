@@ -1,0 +1,27 @@
+name: Smart Review Revoker | Review
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+run-name: ${{ github.event.review.pull_request.title }} | ${{ github.event.pull_request.number }} | Reviewed by ${{ github.actor }}
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  save-pr-approved-commit-sha:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    name: Save PR Approved Commit SHA
+    steps:
+      - shell: bash
+        run: |
+          echo ${{ github.event.review.commit_id }} > approved-commit-id.txt
+      - name: Upload Commit ID
+        uses: actions/upload-artifact@v3
+        with:
+          name: approved-commit-id-${{ github.event.pull_request.number }}
+          path: approved-commit-id.txt
+          if-no-files-found: error
