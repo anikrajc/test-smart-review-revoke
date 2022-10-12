@@ -37,10 +37,11 @@ jobs:
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
-        workflow_conclusion: success
-        pr: ${{github.event.pull_request.number}}
-        name: approved-commit-id
-        if_no_artifact_found: warn
+        with:
+          workflow_conclusion: success
+          pr: ${{github.event.pull_request.number}}
+          name: approved-commit-id
+          if_no_artifact_found: warn
       # - name: Download Previously Approved Commit ID
       #   uses: actions/download-artifact@v3
       #   with:
