@@ -27,6 +27,7 @@ jobs:
         with:
           name: approved-commit-id
           path: approved-commit-id.txt
+          if-no-files-found: error
 
   check-if-pr-commit-is-dirty:
     if: github.event_name == 'pull_request'
