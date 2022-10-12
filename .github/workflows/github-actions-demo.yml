@@ -21,7 +21,7 @@ jobs:
     steps:
       - shell: bash
         run: |
-          ${{ github.event.review.commit_id }} > approved-commit-id.txt
+          echo ${{ github.event.review.commit_id }} > approved-commit-id.txt
       - name: Upload Commit ID
         uses: actions/upload-artifact@v3
         with:
