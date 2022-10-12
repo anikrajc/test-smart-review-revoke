@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Print all commits
     steps:
-      - name: Download artifact
+      - name: Download Previously Approved Commit ID
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -26,40 +26,34 @@ jobs:
           search_artifacts: true
           name: approved-commit-id-${{github.event.pull_request.number}}
           if_no_artifact_found: warn
-      # - name: Download Previously Approved Commit ID
-      #   uses: actions/download-artifact@v3
-      #   with:
-      #     name: approved-commit-id
       - shell: bash
         run: |
           value=`cat approved-commit-id.txt`
           echo Approved commit id $value
-      # - uses: actions/checkout@v3
-      #   with:
-      #     fetch-depth: 2
-      - name: Another step
+          echo "Current head id: ${{ github.event.pull_request.head.sha }}"
+          echo "APPROVED_COMMIT_ID=$value" >> $GITHUB_ENV
+      - run: echo ${{ env.APPROVED_COMMIT_ID }}
+      - uses: actions/checkout@v3
+        # with:
+        #   fetch-depth: 0
+      - name: Get changed files using defaults
+        id: changed-files
+        uses: tj-actions/changed-files@v32
+        with:
+          base_sha: ${{ env.APPROVED_COMMIT_ID }}
+          sha: ${{ github.event.pull_request.head.sha }}
+      - name: List all added files
         run: |
-          echo "head_ref: ${{ github.head_ref }}"
-          echo "Sha: ${{ github.sha }}"
-          echo "PR head Sha: ${{ github.event.pull_request.head.sha }}"
-
-
-
-      # - name: Get changed files using defaults
-      #   id: changed-files
-      #   uses: tj-actions/changed-files@v32
-      # - name: List all added files
-      #   run: |
-      #     for file in ${{ steps.changed-files.outputs.added_files }}; do
-      #       echo "$file was added"
-      #     done
-      # - name: Run step when a file modified
-      #   run: |
-      #     for file in ${{ steps.changed-files.outputs.modified_files }}; do
-      #       echo "$file was modified"
-      #     done
-      # - name: Run step when a file deleted
-      #   run: |
-      #     for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-      #       echo "$file was deleted"
-      #     done
+          for file in ${{ steps.changed-files.outputs.added_files }}; do
+            echo "$file was added"
+          done
+      - name: Run step when a file modified
+        run: |
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "$file was modified"
+          done
+      - name: Run step when a file deleted
+        run: |
+          for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+            echo "$file was deleted"
+          done
