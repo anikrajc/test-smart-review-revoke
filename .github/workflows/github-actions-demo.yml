@@ -17,11 +17,12 @@ jobs:
   save-pr-approved-commit-sha:
     if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
     runs-on: ubuntu-latest
-    name: Save PR Approved Commit SHA
-     name: Print SHA
+    
+    name: Print SHA
         run: |
           echo "head_ref: ${{ github.head_ref }}"
           echo "Sha: ${{ github.sha }}"
+    # name: Save PR Approved Commit SHA
     # steps:
     #   - shell: bash
     #     run: |
