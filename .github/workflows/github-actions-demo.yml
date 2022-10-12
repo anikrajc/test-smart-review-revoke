@@ -4,7 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
-run-name: ${{ github.event.pull_request.title }} \#${{ github.event.pull_request.number }} | Run \#${{ github.run_id }}
+run-name: ${{ github.event.pull_request.title }} #${{ github.event.pull_request.number }}
 
 on:
   pull_request:
