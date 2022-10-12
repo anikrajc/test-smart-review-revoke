@@ -1,7 +1,7 @@
 name: Smart Review Revoker | Review
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 run-name: ${{ github.event.review.pull_request.title }} | ${{ github.event.pull_request.number }} | Reviewed by ${{ github.actor }}
