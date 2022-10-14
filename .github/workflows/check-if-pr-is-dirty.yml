@@ -42,18 +42,23 @@ jobs:
         with:
           base_sha: ${{ env.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
-      - name: List all added files
+      - name: Check review is stale
         run: |
           for file in ${{ steps.changed-files.outputs.added_files }}; do
             echo "$file was added"
           done
-      - name: Run step when a file modified
-        run: |
           for file in ${{ steps.changed-files.outputs.modified_files }}; do
             echo "$file was modified"
           done
-      - name: Run step when a file deleted
-        run: |
           for file in ${{ steps.changed-files.outputs.deleted_files }}; do
             echo "$file was deleted"
           done
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{github.event.pull_request.number}},
+              owner: ${{github.event.repository.owner.login}},
+              repo: ${{github.event.repository.name}},
+              body: '👋 Test!'
+            })
