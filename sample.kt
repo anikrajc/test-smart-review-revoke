@@ -30,7 +30,6 @@ class AppRequestInterceptor(
         isSameDomain: Boolean,
         isRedirect: Boolean,
         isDirectNavigation: Boolean,
-        isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
         interceptAmoRequest(uri, isSameDomain, hasUserGesture)?.let { response ->
             return response
