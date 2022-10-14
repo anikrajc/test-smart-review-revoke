@@ -25,3 +25,13 @@ jobs:
           name: approved-commit-id-${{ github.event.pull_request.number }}
           path: approved-commit-id.txt
           if-no-files-found: error
+      - name: Send comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}',
+              body: '👋 I got reviewed by ${{ github.actor }} at ${{ github.event.review.commit_id }}'
+            })

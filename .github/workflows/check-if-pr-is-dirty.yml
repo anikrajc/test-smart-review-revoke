@@ -43,16 +43,47 @@ jobs:
           base_sha: ${{ env.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
       - name: Check review is stale
+        id: stale-check
         run: |
-          for file in ${{ steps.changed-files.outputs.added_files }}; do
-            echo "$file was added"
-          done
-          for file in ${{ steps.changed-files.outputs.modified_files }}; do
-            echo "$file was modified"
-          done
-          for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-            echo "$file was deleted"
-          done
+          added_files=${{ steps.changed-files.outputs.added_files }}
+          copied_files=${{ steps.changed-files.outputs.copied_files }}
+          deleted_files=${{ steps.changed-files.outputs.deleted_files }}
+          modified_files=${{ steps.changed-files.outputs.modified_files }}
+          renamed_files=${{ steps.changed-files.outputs.renamed_files }}
+          type_changed_files=${{ steps.changed-files.outputs.type_changed_files }}
+          unmerged_files=${{ steps.changed-files.outputs.unmerged_files }}
+          unknown_files=${{ steps.changed-files.outputs.unknown_files }}
+
+          if [ ! -z "$added_files" -a "$added_files" != " " ]; then
+              echo "Files added, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
+              echo "Files copied, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
+              echo "Files deleted, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
+              echo "Files renamed, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
+              echo "Files type changed, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
+              echo "Files unmerged, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
+              echo "Files unknown, quitting early"
+              echo "::set-output name=dirty::yes"
+          elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
+              for file in ${{ steps.changed-files.outputs.modified_files }}; do
+                  echo "$file was modified"
+              done
+              echo "::set-output name=dirty::no"
+          else
+              echo "No changes"
+              echo "::set-output name=dirty::yes"
+          fi
       - uses: actions/github-script@v6
         with:
           script: |
@@ -60,5 +91,5 @@ jobs:
               issue_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
-              body: '👋 Test!'
+              body: '👋 Output of run is ${{ steps.stale-check.outputs.dirty }}!'
             })
