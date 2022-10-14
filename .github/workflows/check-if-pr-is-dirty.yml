@@ -75,14 +75,14 @@ jobs:
           elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
               echo "Files unknown, quitting early"
               echo "::set-output name=dirty::yes"
-          elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
+          elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
               for file in ${{ steps.changed-files.outputs.modified_files }}; do
                   echo "$file was modified"
               done
               echo "::set-output name=dirty::no"
           else
               echo "No changes"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=dirty::no"
           fi
       - uses: actions/github-script@v6
         with:
