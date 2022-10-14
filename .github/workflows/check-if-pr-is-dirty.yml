@@ -57,8 +57,8 @@ jobs:
         with:
           script: |
             github.rest.issues.createComment({
-              issue_number: ${{github.event.pull_request.number}},
-              owner: ${{github.event.repository.owner.login}},
-              repo: ${{github.event.repository.name}},
+              issue_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}',
               body: '👋 Test!'
             })
