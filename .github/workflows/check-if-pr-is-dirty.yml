@@ -4,7 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
-run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }}
+run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }} | Safe check
 
 on:
   pull_request:
@@ -12,9 +12,9 @@ on:
       - main
 
 jobs:
-  check-if-pr-commit-is-dirty:
+  check-if-changes-are-safe:
     runs-on: ubuntu-latest
-    name: Print all commits
+    name: Safe check
     steps:
       - name: Download Previously Approved Commit ID
         id: download-artifact
@@ -25,6 +25,7 @@ jobs:
           search_artifacts: true
           name: approved-commit-id-${{github.event.pull_request.number}}
           if_no_artifact_found: warn
+
       - shell: bash
         run: |
           value=`cat approved-commit-id.txt`
@@ -34,7 +35,7 @@ jobs:
           echo "APPROVED_COMMIT_ID=$value" >> $GITHUB_ENV
       - run: echo ${{ env.APPROVED_COMMIT_ID }}
 
-      - name: 'PR commits + 1'
+      - name: 'Fetch PR comment count'
         run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "${GITHUB_ENV}"
 
       - uses: actions/checkout@v3
@@ -57,85 +58,25 @@ jobs:
           path: new-code
           base_sha: ${{ env.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
-      # - name: Check review is stale
-      #   id: stale-check
-      #   run: |
-      #     added_files="${{ steps.changed-files.outputs.added_files }}"
-      #     copied_files="${{ steps.changed-files.outputs.copied_files }}"
-      #     deleted_files="${{ steps.changed-files.outputs.deleted_files }}"
-      #     modified_files="${{ steps.changed-files.outputs.modified_files }}"
-      #     renamed_files="${{ steps.changed-files.outputs.renamed_files }}"
-      #     type_changed_files="${{ steps.changed-files.outputs.type_changed_files }}"
-      #     unmerged_files="${{ steps.changed-files.outputs.unmerged_files }}"
-      #     unknown_files="${{ steps.changed-files.outputs.unknown_files }}"
-
-      #     if [ ! -z "$added_files" -a "$added_files" != " " ]; then
-      #         echo "Files added, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::added_files"
-      #         echo "::set-output name=files::$added_files"
-      #     elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
-      #         echo "Files copied, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::copied_files"
-      #         echo "::set-output name=files::$copied_files"
-      #     elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
-      #         echo "Files deleted, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::deleted_files"
-      #         echo "::set-output name=files::$deleted_files"
-      #     elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
-      #         echo "Files renamed, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::renamed_files"
-      #         echo "::set-output name=files::$renamed_files"
-      #     elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
-      #         echo "Files type changed, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::type_changed_files"
-      #         echo "::set-output name=files::$type_changed_files"
-      #     elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
-      #         echo "Files unmerged, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::unmerged_files"
-      #         echo "::set-output name=files::$unmerged_files"
-      #     elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
-      #         echo "Files unknown, quitting early"
-      #         echo "::set-output name=stale::yes"
-      #         echo "::set-output name=reason::unknown_files"
-      #         echo "::set-output name=files::$unknown_files"
-      #     elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
-      #         for file in ${{ steps.changed-files.outputs.modified_files }}; do
-      #             echo "$file was modified"
-      #         done
-      #         echo "::set-output name=stale::no"
-      #         echo "::set-output name=reason::modified_files"
-      #         echo "::set-output name=files::$modified_files"
-      #     else
-      #         echo "No changes"
-      #         echo "::set-output name=stale::no"
-      #         echo "::set-output name=reason::nothing"
-      #         echo "::set-output files=files::nothing"
-      #     fi
       
-      - name: Check for stale
-        uses: anikrajc/test-file-safe-check-action@v5
+      - name: Safe modification check
+        id: safe-modification-check
+        uses: anikrajc/test-file-safe-check-action@v6
         with:
           old-code: old-code
           new-code: new-code
           all-changed-files: "{ \"added_files\":${{ steps.changed-files.outputs.added_files }}, \"copied_files\":${{ steps.changed-files.outputs.copied_files }}, \"deleted_files\":${{ steps.changed-files.outputs.deleted_files }}, \"modified_files\":${{ steps.changed-files.outputs.modified_files }}, \"renamed_files\":${{ steps.changed-files.outputs.renamed_files }}, \"type_changed_files\":${{ steps.changed-files.outputs.type_changed_files }}, \"unmerged_files\":${{ steps.changed-files.outputs.unmerged_files }}, \"unknown_files\":${{ steps.changed-files.outputs.unknown_files }} }"
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+          ignore-list: "[]"
+          start-marker: "test-srr-start"
+          end-marker: "test-srr-end"
 
-
-      # - name: Stale, revoke reviews
-      #   if: steps.stale-check.outputs.stale == 'yes'
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       github.rest.issues.createComment({
-      #         issue_number: '${{github.event.pull_request.number}}',
-      #         owner: '${{github.event.repository.owner.login}}',
-      #         repo: '${{github.event.repository.name}}',
-      #         body: '🤖 SRR : \nstale = `${{ steps.stale-check.outputs.stale }}` \n reason = `${{ steps.stale-check.outputs.reason }}` \n files\n```\n${{ steps.stale-check.outputs.files }}\n```'
-      #       })
+      - name: Send comments
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}',
+              body: '🤖 SRR : Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
+            })
