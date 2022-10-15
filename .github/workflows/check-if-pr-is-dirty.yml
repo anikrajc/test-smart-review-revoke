@@ -123,7 +123,7 @@ jobs:
         with:
           old-code: old-code
           new-code: new-code
-          all-changed-files: "{\"changed\":${{ steps.changed-files.outputs.all_changed_and_modified_files }}}"
+          all-changed-files: "{ \"added_files\":${{ steps.changed-files.outputs.added_files }}, \"copied_files\":${{ steps.changed-files.outputs.copied_files }}, \"deleted_files\":${{ steps.changed-files.outputs.deleted_files }}, \"modified_files\":${{ steps.changed-files.outputs.modified_files }}, \"renamed_files\":${{ steps.changed-files.outputs.renamed_files }}, \"type_changed_files\":${{ steps.changed-files.outputs.type_changed_files }}, \"unmerged_files\":${{ steps.changed-files.outputs.unmerged_files }}, \"unknown_files\":${{ steps.changed-files.outputs.unknown_files }} }"
       - name: Get the output time
         run: echo "The time was ${{ steps.hello.outputs.time }}"
 
