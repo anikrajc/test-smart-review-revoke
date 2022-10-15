@@ -1,1 +1,3 @@
 Check if PR has reviews before running
+Check if PR was reviewed before running
+Check if PR is ready before running
