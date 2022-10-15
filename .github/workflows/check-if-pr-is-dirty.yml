@@ -119,7 +119,7 @@ jobs:
       #     fi
       
       - name: Check for stale
-        uses: anikrajc/test-file-safe-check-action@v4
+        uses: anikrajc/test-file-safe-check-action@v5
         with:
           old-code: old-code
           new-code: new-code
