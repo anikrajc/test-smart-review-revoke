@@ -5,6 +5,6 @@ str3=""
 if [ ! -z "$str" -a "$str" != " " ]; then
 fi
 # test-srr-end
-if [ ! -z "$str3" -a "$str3" != " " ]; then
+if [ ! -z "$str3"asd -a "$str3" != " " ]; then
         echo "Str3 is not null or spacess"
 fi
