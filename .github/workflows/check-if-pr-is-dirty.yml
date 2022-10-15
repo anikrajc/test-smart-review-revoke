@@ -56,33 +56,33 @@ jobs:
 
           if [ ! -z "$added_files" -a "$added_files" != " " ]; then
               echo "Files added, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
               echo "Files copied, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
               echo "Files deleted, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
               echo "Files renamed, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
               echo "Files type changed, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
               echo "Files unmerged, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
               echo "Files unknown, quitting early"
-              echo "::set-output name=dirty::yes"
+              echo "::set-output name=stale::yes"
           elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
               for file in ${{ steps.changed-files.outputs.modified_files }}; do
                   echo "$file was modified"
               done
-              echo "::set-output name=dirty::no"
+              echo "::set-output name=stale::no"
           else
               echo "No changes"
-              echo "::set-output name=dirty::no"
+              echo "::set-output name=stale::no"
           fi
       - uses: actions/github-script@v6
         with:
@@ -91,5 +91,5 @@ jobs:
               issue_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
-              body: '👋 Output of run is ${{ steps.stale-check.outputs.dirty }}!'
+              body: '👋 Output of run is ${{ steps.stale-check.outputs.stale }}!'
             })
