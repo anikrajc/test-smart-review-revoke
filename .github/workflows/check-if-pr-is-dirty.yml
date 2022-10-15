@@ -83,32 +83,50 @@ jobs:
           if [ ! -z "$added_files" -a "$added_files" != " " ]; then
               echo "Files added, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::added_files"
+              echo "::set-output name=files::$added_files"
           elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
               echo "Files copied, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::copied_files"
+              echo "::set-output name=files::$copied_files"
           elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
               echo "Files deleted, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::deleted_files"
+              echo "::set-output name=files::$deleted_files"
           elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
               echo "Files renamed, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::renamed_files"
+              echo "::set-output name=files::$renamed_files"
           elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
               echo "Files type changed, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::type_changed_files"
+              echo "::set-output name=files::$type_changed_files"
           elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
               echo "Files unmerged, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::unmerged_files"
+              echo "::set-output name=files::$unmerged_files"
           elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
               echo "Files unknown, quitting early"
               echo "::set-output name=stale::yes"
+              echo "::set-output name=reason::unknown_files"
+              echo "::set-output name=files::$unknown_files"
           elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
               for file in ${{ steps.changed-files.outputs.modified_files }}; do
                   echo "$file was modified"
               done
               echo "::set-output name=stale::no"
+              echo "::set-output name=reason::modified_files"
+              echo "::set-output name=files::$modified_files"
           else
               echo "No changes"
               echo "::set-output name=stale::no"
+              echo "::set-output name=reason::nothing"
+              echo "::set-output files=files::nothing"
           fi
       - uses: actions/github-script@v6
         with:
@@ -117,5 +135,5 @@ jobs:
               issue_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
-              body: '👋 Output of run is ${{ steps.stale-check.outputs.stale }}!'
+              body: '👋 stale = ${{ steps.stale-check.outputs.stale }} \n reason = ${{ steps.stale-check.outputs.reason }} \n files\n${{ steps.stale-check.outputs.files }}'
             })
