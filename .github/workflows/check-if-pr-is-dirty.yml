@@ -16,6 +16,35 @@ jobs:
     runs-on: ubuntu-latest
     name: Safe check
     steps:
+
+      - name: Get existing reviews
+        id: get-existing-reviews
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const reviews = github.rest.pulls.listReviews({
+              pull_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}'
+            })
+            let reviewIds = []
+            let commitId = ""
+            for (const review of reviews) {
+              if (review.state == "APPROVED") {
+                reviewIds.push(review.id)
+                console.log(review.commit_id)
+                commitId = review.commit_id
+              }
+            }
+
+            if (reviewIds.length == 0) {
+              return null
+            } else {
+              return { \"reviews\" : reviewIds, \"commit_id\" : commitId }
+            }
+
+      - run: echo ${{ steps.get-existing-reviews.output.result }}
+
       - name: Download Previously Approved Commit ID
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
@@ -69,6 +98,18 @@ jobs:
           ignore-list: "[]"
           start-marker: "test-srr-start"
           end-marker: "test-srr-end"
+
+      - name: Revoke reviews
+        if: ${{ steps.safe-modification-check.outputs.is-safe-change }} == false
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}',
+              body: '🤖 SRR : Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
+            })    
 
       - name: Send comments
         uses: actions/github-script@v6
