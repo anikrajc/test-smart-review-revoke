@@ -12,18 +12,6 @@ on:
       - main
 
 jobs:
-  hello_world_job:
-      runs-on: ubuntu-latest
-      name: A job to say hello
-      steps:
-        - name: Hello world action step
-          id: hello
-          uses: anikrajc/test-file-safe-check-action@v1
-          with:
-            who-to-greet: 'Mona the Octocat'
-        # Use the output from the `hello` step
-        - name: Get the output time
-          run: echo "The time was ${{ steps.hello.outputs.time }}"
   check-if-pr-commit-is-dirty:
     runs-on: ubuntu-latest
     name: Print all commits
@@ -53,87 +41,101 @@ jobs:
         with:
           fetch-depth: 1
           ref: "${{ env.APPROVED_COMMIT_ID }}"
-          path: repo-old
+          path: old-code
 
       - uses: actions/checkout@v3
         with:
           fetch-depth: ${{ env.PR_FETCH_DEPTH }}
           ref: "${{ github.event.pull_request.head.sha }}"
-          path: repo-new
+          path: new-code
 
       - name: Get changed files using defaults
         id: changed-files
         uses: tj-actions/changed-files@v32
         with:
-          path: repo-new
+          json: true
+          path: new-code
           base_sha: ${{ env.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
-      - name: Check review is stale
-        id: stale-check
-        run: |
-          added_files="${{ steps.changed-files.outputs.added_files }}"
-          copied_files="${{ steps.changed-files.outputs.copied_files }}"
-          deleted_files="${{ steps.changed-files.outputs.deleted_files }}"
-          modified_files="${{ steps.changed-files.outputs.modified_files }}"
-          renamed_files="${{ steps.changed-files.outputs.renamed_files }}"
-          type_changed_files="${{ steps.changed-files.outputs.type_changed_files }}"
-          unmerged_files="${{ steps.changed-files.outputs.unmerged_files }}"
-          unknown_files="${{ steps.changed-files.outputs.unknown_files }}"
+      # - name: Check review is stale
+      #   id: stale-check
+      #   run: |
+      #     added_files="${{ steps.changed-files.outputs.added_files }}"
+      #     copied_files="${{ steps.changed-files.outputs.copied_files }}"
+      #     deleted_files="${{ steps.changed-files.outputs.deleted_files }}"
+      #     modified_files="${{ steps.changed-files.outputs.modified_files }}"
+      #     renamed_files="${{ steps.changed-files.outputs.renamed_files }}"
+      #     type_changed_files="${{ steps.changed-files.outputs.type_changed_files }}"
+      #     unmerged_files="${{ steps.changed-files.outputs.unmerged_files }}"
+      #     unknown_files="${{ steps.changed-files.outputs.unknown_files }}"
 
-          if [ ! -z "$added_files" -a "$added_files" != " " ]; then
-              echo "Files added, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::added_files"
-              echo "::set-output name=files::$added_files"
-          elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
-              echo "Files copied, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::copied_files"
-              echo "::set-output name=files::$copied_files"
-          elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
-              echo "Files deleted, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::deleted_files"
-              echo "::set-output name=files::$deleted_files"
-          elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
-              echo "Files renamed, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::renamed_files"
-              echo "::set-output name=files::$renamed_files"
-          elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
-              echo "Files type changed, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::type_changed_files"
-              echo "::set-output name=files::$type_changed_files"
-          elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
-              echo "Files unmerged, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::unmerged_files"
-              echo "::set-output name=files::$unmerged_files"
-          elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
-              echo "Files unknown, quitting early"
-              echo "::set-output name=stale::yes"
-              echo "::set-output name=reason::unknown_files"
-              echo "::set-output name=files::$unknown_files"
-          elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
-              for file in ${{ steps.changed-files.outputs.modified_files }}; do
-                  echo "$file was modified"
-              done
-              echo "::set-output name=stale::no"
-              echo "::set-output name=reason::modified_files"
-              echo "::set-output name=files::$modified_files"
-          else
-              echo "No changes"
-              echo "::set-output name=stale::no"
-              echo "::set-output name=reason::nothing"
-              echo "::set-output files=files::nothing"
-          fi
-      - uses: actions/github-script@v6
+      #     if [ ! -z "$added_files" -a "$added_files" != " " ]; then
+      #         echo "Files added, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::added_files"
+      #         echo "::set-output name=files::$added_files"
+      #     elif [ ! -z "$copied_files" -a "$copied_files" != " " ]; then
+      #         echo "Files copied, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::copied_files"
+      #         echo "::set-output name=files::$copied_files"
+      #     elif [ ! -z "$deleted_files" -a "$deleted_files" != " " ]; then
+      #         echo "Files deleted, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::deleted_files"
+      #         echo "::set-output name=files::$deleted_files"
+      #     elif [ ! -z "$renamed_files" -a "$renamed_files" != " " ]; then
+      #         echo "Files renamed, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::renamed_files"
+      #         echo "::set-output name=files::$renamed_files"
+      #     elif [ ! -z "$type_changed_files" -a "$type_changed_files" != " " ]; then
+      #         echo "Files type changed, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::type_changed_files"
+      #         echo "::set-output name=files::$type_changed_files"
+      #     elif [ ! -z "$unmerged_files" -a "$unmerged_files" != " " ]; then
+      #         echo "Files unmerged, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::unmerged_files"
+      #         echo "::set-output name=files::$unmerged_files"
+      #     elif [ ! -z "$unknown_files" -a "$unknown_files" != " " ]; then
+      #         echo "Files unknown, quitting early"
+      #         echo "::set-output name=stale::yes"
+      #         echo "::set-output name=reason::unknown_files"
+      #         echo "::set-output name=files::$unknown_files"
+      #     elif [ ! -z "$modified_files" -a "$modified_files" != " " ]; then
+      #         for file in ${{ steps.changed-files.outputs.modified_files }}; do
+      #             echo "$file was modified"
+      #         done
+      #         echo "::set-output name=stale::no"
+      #         echo "::set-output name=reason::modified_files"
+      #         echo "::set-output name=files::$modified_files"
+      #     else
+      #         echo "No changes"
+      #         echo "::set-output name=stale::no"
+      #         echo "::set-output name=reason::nothing"
+      #         echo "::set-output files=files::nothing"
+      #     fi
+      
+      - name: Check for stale
+        uses: anikrajc/test-file-safe-check-action@v2
         with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: '${{github.event.pull_request.number}}',
-              owner: '${{github.event.repository.owner.login}}',
-              repo: '${{github.event.repository.name}}',
-              body: '👋 stale = `${{ steps.stale-check.outputs.stale }}` \n reason = `${{ steps.stale-check.outputs.reason }}` \n files\n```\n${{ steps.stale-check.outputs.files }}\n```'
-            })
+          old-code: old-code
+          new-code: new-code
+          all-changed-files: "{\"changed\":${{ steps.changed-files.outputs.all_changed_and_modified_files }}}"
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.time }}"
+
+
+      # - name: Stale, revoke reviews
+      #   if: steps.stale-check.outputs.stale == 'yes'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.createComment({
+      #         issue_number: '${{github.event.pull_request.number}}',
+      #         owner: '${{github.event.repository.owner.login}}',
+      #         repo: '${{github.event.repository.name}}',
+      #         body: '🤖 SRR : \nstale = `${{ steps.stale-check.outputs.stale }}` \n reason = `${{ steps.stale-check.outputs.reason }}` \n files\n```\n${{ steps.stale-check.outputs.files }}\n```'
+      #       })
