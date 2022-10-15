@@ -27,6 +27,7 @@ jobs:
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}'
             })
+            console.log(reviews)
             let reviewIds = []
             let commitId = ""
             for (const review of reviews) {
