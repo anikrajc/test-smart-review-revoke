@@ -135,5 +135,5 @@ jobs:
               issue_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
-              body: '👋 stale = ${{ steps.stale-check.outputs.stale }} \n reason = ${{ steps.stale-check.outputs.reason }} \n files\n${{ steps.stale-check.outputs.files }}'
+              body: '👋 stale = `${{ steps.stale-check.outputs.stale }}` \n reason = `${{ steps.stale-check.outputs.reason }}` \n files\n```\n${{ steps.stale-check.outputs.files }}\n```'
             })
