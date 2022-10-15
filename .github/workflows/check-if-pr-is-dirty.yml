@@ -22,7 +22,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const reviews = github.rest.pulls.listReviews({
+            const reviews = await github.rest.pulls.listReviews({
               pull_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}'
@@ -36,12 +36,7 @@ jobs:
                 commitId = review.commit_id
               }
             }
-
-            if (reviewIds.length == 0) {
-              return null
-            } else {
-              return { \"reviews\" : reviewIds, \"commit_id\" : commitId }
-            }
+            return "Hellp"
 
       - run: echo ${{ steps.get-existing-reviews.output.result }}
 
