@@ -41,16 +41,31 @@ jobs:
         run: |
           value=`cat approved-commit-id.txt`
           echo Approved commit id $value
-          echo "Current head id: ${{ github.event.pull_request.head.sha }}"
+          echo "Current head sha: ${{ github.event.pull_request.head.sha }}"
+          echo "Current head red: ${{ github.event.pull_request.head.ref }}"
           echo "APPROVED_COMMIT_ID=$value" >> $GITHUB_ENV
       - run: echo ${{ env.APPROVED_COMMIT_ID }}
+
+      - name: 'PR commits + 1'
+        run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "${GITHUB_ENV}"
+
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+          ref: "${{ env.APPROVED_COMMIT_ID }}"
+          path: repo-old
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+          ref: "${{ github.event.pull_request.head.sha }}"
+          path: repo-new
+
       - name: Get changed files using defaults
         id: changed-files
         uses: tj-actions/changed-files@v32
         with:
+          path: repo-new
           base_sha: ${{ env.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
       - name: Check review is stale
