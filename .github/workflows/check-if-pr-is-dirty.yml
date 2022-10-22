@@ -81,6 +81,7 @@ jobs:
             })    
 
       - name: Send comments
+        if: ${{ steps.safe-modification-check.outputs.is-safe-change }} == true
         uses: actions/github-script@v6
         with:
           script: |
