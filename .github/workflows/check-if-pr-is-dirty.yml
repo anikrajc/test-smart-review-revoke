@@ -1,10 +1,10 @@
-name: Smart Review Revoker | PR
+name: Smart Review Revoker
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
-run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }} | Safe check
+run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }}
 
 on:
   pull_request:
@@ -19,59 +19,32 @@ jobs:
 
       - name: Get existing reviews
         id: get-existing-reviews
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const reviews = await github.rest.pulls.listReviews({
-              pull_number: '${{github.event.pull_request.number}}',
-              owner: '${{github.event.repository.owner.login}}',
-              repo: '${{github.event.repository.name}}'
-            })
-            console.log(reviews)
-            let reviewIds = []
-            let commitId = ""
-            for (const review of reviews) {
-              if (review.state == "APPROVED") {
-                reviewIds.push(review.id)
-                console.log(review.commit_id)
-                commitId = review.commit_id
-              }
-            }
-            return "Hellp"
-
-      - run: echo ${{ steps.get-existing-reviews.output.result }}
-
-      - name: Download Previously Approved Commit ID
-        id: download-artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: save-pr-approved-commit-sha.yml
-          workflow_conclusion: success
-          search_artifacts: true
-          name: approved-commit-id-${{github.event.pull_request.number}}
-          if_no_artifact_found: warn
-
-      - shell: bash
         run: |
-          value=`cat approved-commit-id.txt`
-          echo Approved commit id $value
-          echo "Current head sha: ${{ github.event.pull_request.head.sha }}"
-          echo "Current head red: ${{ github.event.pull_request.head.ref }}"
-          echo "APPROVED_COMMIT_ID=$value" >> $GITHUB_ENV
-      - run: echo ${{ env.APPROVED_COMMIT_ID }}
+          response=$(curl --location --request POST '${{ secrets.SRR_APPROVED_REVIEWS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}" }')
+          if [ -n "$response" ]; then
+              commitId=$(echo "$response" | sed -n 1p)
+              reviewIds=$(echo "$response" | sed -n 2p)
+              echo "APPROVED_COMMIT_ID=$commitId" >> $GITHUB_OUTPUT
+              echo "REVIEW_IDS=$reviewIds" >> $GITHUB_OUTPUT
+              echo "commit ID is $commitId"
+              echo "review id is $reviewIds"
+          else
+              echo "empty"
+          fi
 
-      - name: 'Fetch PR comment count'
-        run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "${GITHUB_ENV}"
+      - name: 'Fetch PR depth'
+        id: fetch-pr-depth
+        run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-          ref: "${{ env.APPROVED_COMMIT_ID }}"
+          ref: "${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}"
           path: old-code
 
       - uses: actions/checkout@v3
         with:
-          fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+          fetch-depth: ${{ steps.fetch-pr-depth.outputs.PR_FETCH_DEPTH }}
           ref: "${{ github.event.pull_request.head.sha }}"
           path: new-code
 
@@ -81,7 +54,7 @@ jobs:
         with:
           json: true
           path: new-code
-          base_sha: ${{ env.APPROVED_COMMIT_ID }}
+          base_sha: ${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
       
       - name: Safe modification check
@@ -104,7 +77,7 @@ jobs:
               issue_number: '${{github.event.pull_request.number}}',
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
-              body: '🤖 SRR : Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
+              body: '🤖 SRR : Revoking Reviews ${{ steps.get-existing-reviews.outputs.REVIEW_IDS }}. Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
             })    
 
       - name: Send comments

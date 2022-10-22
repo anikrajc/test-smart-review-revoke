@@ -1,10 +1,12 @@
-str="Hello World"
-str2=" "
-str3=""
-# test-srr-start
-if [ ! -z "$str" -a "$str" != " " ]; then
+response=$(curl --location --request POST 'https://us-central1-testsrr-495b8.cloudfunctions.net/getApprovedReviews' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "anikrajc", "repository" : "test-smart-review-revoke", "number" : "1" }')
+echo "$response"
+if [ -n "$response" ]; then
+    commitId=$(echo "$response" | sed -n 1p)
+    reviewIds=$(echo "$response" | sed -n 2p)
+    echo "commit id is $commitId"
+    echo "reviewIds id is $reviewIds"
+else
+    echo "empty"
 fi
-# test-srr-end
-if [ ! -z "$str3"asd -a "$str3" != " " ]; then
-        echo "Str3 is not null or spacess"
-fi
+
+
