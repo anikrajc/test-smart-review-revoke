@@ -17,12 +17,6 @@ jobs:
     name: Safe check
     steps:
 
-      - name: A/B Check
-        uses: actions/github-script@v3
-        with:
-          script: |
-              core.setFailed('envA and envB are not equivalent!') 
-
       - name: Get existing reviews
         id: get-existing-reviews
         run: |
@@ -31,13 +25,25 @@ jobs:
               commitId=$(echo "$response" | sed -n 1p)
               reviewIds=$(echo "$response" | sed -n 2p)
               echo "APPROVED_COMMIT_ID=$commitId" >> $GITHUB_OUTPUT
-              echo "REVIEW_IDS=$reviewIds" >> $GITHUB_OUTPUT
-              echo "commit ID is $commitId"
-              echo "review id is $reviewIds"
+              echo "REVIEW_IDS=$reviewIds" >> $GITHUB_OUTPUT=
           else
-              echo "No approved reviews, quiting early."
-              exit 0
+              errorReason="No approved reviews, quiting early."
+              echo $errorReason
+              echo "ERROR=$errorReason" >> $GITHUB_OUTPUT
           fi
+
+      - name: Send error comments
+        if: ${{ steps.get-existing-reviews.outputs.ERROR }} != ""
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: '${{github.event.pull_request.number}}',
+              owner: '${{github.event.repository.owner.login}}',
+              repo: '${{github.event.repository.name}}',
+              body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
+            })
+            core.notice('${{ steps.get-existing-reviews.outputs.ERROR }}')
 
       - name: 'Fetch PR depth'
         id: fetch-pr-depth
