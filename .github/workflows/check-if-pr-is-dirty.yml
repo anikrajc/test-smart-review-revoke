@@ -43,6 +43,9 @@ jobs:
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
             })
+            core.notice('${{ steps.get-existing-reviews.outputs.ERROR }}')
+            core.warning(${{ steps.get-existing-reviews.outputs.ERROR }}')
+            core.error('${{ steps.get-existing-reviews.outputs.ERROR }}')
             core.setFailed('${{ steps.get-existing-reviews.outputs.ERROR }}')
 
       - name: 'Fetch PR depth'
