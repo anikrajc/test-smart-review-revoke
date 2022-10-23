@@ -29,7 +29,8 @@ jobs:
               echo "commit ID is $commitId"
               echo "review id is $reviewIds"
           else
-              echo "empty"
+              echo "No approved reviews, quiting early."
+              exit 1
           fi
 
       - name: 'Fetch PR depth'
