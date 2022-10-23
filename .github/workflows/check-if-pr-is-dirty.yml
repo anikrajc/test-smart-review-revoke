@@ -32,8 +32,8 @@ jobs:
               echo "ERROR=$errorReason" >> $GITHUB_OUTPUT
           fi
 
-      - name: Send error comments
-        if: ${{ steps.get-existing-reviews.outputs.ERROR }} != ""
+      - name: Send No approved reviews comments
+        if: ${{ steps.get-existing-reviews.outputs.ERROR }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -43,7 +43,7 @@ jobs:
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
             })
-            core.notice('${{ steps.get-existing-reviews.outputs.ERROR }}')
+            core.setFailed('${{ steps.get-existing-reviews.outputs.ERROR }}')
 
       - name: 'Fetch PR depth'
         id: fetch-pr-depth
