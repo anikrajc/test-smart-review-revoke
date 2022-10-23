@@ -17,6 +17,12 @@ jobs:
     name: Safe check
     steps:
 
+      - name: A/B Check
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed('envA and envB are not equivalent!') 
+
       - name: Get existing reviews
         id: get-existing-reviews
         run: |
@@ -30,7 +36,7 @@ jobs:
               echo "review id is $reviewIds"
           else
               echo "No approved reviews, quiting early."
-              exit 1
+              exit 0
           fi
 
       - name: 'Fetch PR depth'
