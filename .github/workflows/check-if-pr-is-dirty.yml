@@ -109,4 +109,15 @@ jobs:
                   repo: '${{github.event.repository.name}}',
                   body: '🤖 SRR : Changes were not safe, revoking reviews ${{needs.check-existing-reviews.outputs.REVIEW_IDS}}'
                 })
+
+                let reviews = "${{needs.check-existing-reviews.outputs.REVIEW_IDS}}".split(" ")
+                for (const review of reviews) {
+                    github.rest.pulls.dismissReview({
+                      '${{github.event.repository.owner.login}}',
+                      '${{github.event.repository.name}}',
+                      '${{github.event.pull_request.number}}',
+                      review,
+                      "Dismissed by SRR",
+                    });
+                }
             }
