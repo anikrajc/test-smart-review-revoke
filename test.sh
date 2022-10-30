@@ -1,5 +1,5 @@
 response=$(curl --location --request POST 'https://us-central1-testsrr-495b8.cloudfunctions.net/getApprovedReviews' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "anikrajc", "repository" : "test-smart-review-revoke", "number" : "1" }')
-echo "$response"asdas
+echo "$response"asdasasd
 #  test-srr-start
 if [ -n "$response" ]; then
     commitId=$(echo "$response" | sed -n 1p)
