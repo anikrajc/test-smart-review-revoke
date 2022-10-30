@@ -112,6 +112,7 @@ jobs:
 
                 let reviews = "${{needs.check-existing-reviews.outputs.REVIEW_IDS}}".split(" ")
                 for (const review of reviews) {
+                    console.log(review)
                     github.rest.pulls.dismissReview({
                       '${{github.event.repository.owner.login}}',
                       '${{github.event.repository.name}}',
