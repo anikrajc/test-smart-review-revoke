@@ -4,7 +4,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
-run-name: ${{ github.event.pull_request.title }} | ${{ github.event.pull_request.number }}
+run-name: SRR | PR ${{ github.event.pull_request.number }} | ${{ github.event.pull_request.title }}
 
 on:
   pull_request:
@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Safe check
     steps:
-
       - name: Get existing reviews
         id: get-existing-reviews
         run: |
@@ -43,12 +42,9 @@ jobs:
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
             })
-            core.notice('${{ steps.get-existing-reviews.outputs.ERROR }}')
-            core.warning('${{ steps.get-existing-reviews.outputs.ERROR }}')
-            core.error('${{ steps.get-existing-reviews.outputs.ERROR }}')
-            core.setFailed('${{ steps.get-existing-reviews.outputs.ERROR }}')
+            exit 0
 
-      - name: 'Fetch PR depth'
+      - name: "Fetch PR depth"
         id: fetch-pr-depth
         run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_OUTPUT
 
@@ -72,14 +68,14 @@ jobs:
           path: new-code
           base_sha: ${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
-      
+
       - name: Safe modification check
         id: safe-modification-check
         uses: anikrajc/test-file-safe-check-action@v6
         with:
           old-code: old-code
           new-code: new-code
-          all-changed-files: "{ \"added_files\":${{ steps.changed-files.outputs.added_files }}, \"copied_files\":${{ steps.changed-files.outputs.copied_files }}, \"deleted_files\":${{ steps.changed-files.outputs.deleted_files }}, \"modified_files\":${{ steps.changed-files.outputs.modified_files }}, \"renamed_files\":${{ steps.changed-files.outputs.renamed_files }}, \"type_changed_files\":${{ steps.changed-files.outputs.type_changed_files }}, \"unmerged_files\":${{ steps.changed-files.outputs.unmerged_files }}, \"unknown_files\":${{ steps.changed-files.outputs.unknown_files }} }"
+          all-changed-files: '{ "added_files":${{ steps.changed-files.outputs.added_files }}, "copied_files":${{ steps.changed-files.outputs.copied_files }}, "deleted_files":${{ steps.changed-files.outputs.deleted_files }}, "modified_files":${{ steps.changed-files.outputs.modified_files }}, "renamed_files":${{ steps.changed-files.outputs.renamed_files }}, "type_changed_files":${{ steps.changed-files.outputs.type_changed_files }}, "unmerged_files":${{ steps.changed-files.outputs.unmerged_files }}, "unknown_files":${{ steps.changed-files.outputs.unknown_files }} }'
           ignore-list: "[]"
           start-marker: "test-srr-start"
           end-marker: "test-srr-end"
@@ -94,16 +90,24 @@ jobs:
               owner: '${{github.event.repository.owner.login}}',
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : Revoking Reviews ${{ steps.get-existing-reviews.outputs.REVIEW_IDS }}. Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
-            })    
+            })
 
       - name: Send comments
-        if: ${{ steps.safe-modification-check.outputs.is-safe-change }} == "true"
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: '${{github.event.pull_request.number}}',
-              owner: '${{github.event.repository.owner.login}}',
-              repo: '${{github.event.repository.name}}',
-              body: '🤖 SRR : Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
-            })
+            if ("${{ steps.safe-modification-check.outputs.is-safe-change }}" == "true") {
+                  github.rest.issues.createComment({
+                  issue_number: '${{github.event.pull_request.number}}',
+                  owner: '${{github.event.repository.owner.login}}',
+                  repo: '${{github.event.repository.name}}',
+                  body: '🤖 SRR : Changes were safe'
+                })
+            } else {
+                  github.rest.issues.createComment({
+                  issue_number: '${{github.event.pull_request.number}}',
+                  owner: '${{github.event.repository.owner.login}}',
+                  repo: '${{github.event.repository.name}}',
+                  body: '🤖 SRR : Changes were not safe'
+                })
+            }
