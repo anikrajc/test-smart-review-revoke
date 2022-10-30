@@ -117,7 +117,7 @@ jobs:
                       '${{github.event.repository.name}}',
                       '${{github.event.pull_request.number}}',
                       review,
-                      "Dismissed by SRR",
+                      'Dismissed by SRR'
                     });
                 }
             }
