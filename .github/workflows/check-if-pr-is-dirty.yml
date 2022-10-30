@@ -114,11 +114,12 @@ jobs:
                 for (const review of reviews) {
                     console.log(review)
                     github.rest.pulls.dismissReview({
-                      '${{github.event.repository.owner.login}}',
-                      '${{github.event.repository.name}}',
-                      '${{github.event.pull_request.number}}',
-                      review,
-                      'Dismissed by SRR'
+                      owner: '${{github.event.repository.owner.login}}',
+                      repo: '${{github.event.repository.name}}',
+                      pull_number: '${{github.event.pull_request.number}}',
+                      review_id: review,
+                      message: 'Dismissed by SRR',
+                      event: 'DISMISS'
                     });
                 }
             }
