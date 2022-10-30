@@ -4,7 +4,7 @@ echo "$response"asdasasdasdasdasd
 if [ -n "$response" ]; then
     commitId=$(echo "$response" | sed -n 1p)
     reviewIds=$(echo "$response" | sed -n 2p)
-    echo "commit id is $commitIdasdasdasda
+    echo "commit id is $commitIdasdasdasdaasdads
     echo "reviewIds id is $reviewIds"as das da s
 # test-srr-end
 else
