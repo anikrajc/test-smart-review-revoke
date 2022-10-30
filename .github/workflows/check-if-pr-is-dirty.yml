@@ -24,7 +24,7 @@ jobs:
       - name: Get existing reviews
         id: get-existing-reviews
         run: |
-          response=$(curl --location --request POST '${{ secrets.SRR_APPROVED_REVIEWS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}" }')
+          response=$(curl --location --request POST '${{ secrets.SRR_APPROVED_REVIEWS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}", "password" : "${{ secrets.SRR_API_PASSWORD }}" }')
           if [ -n "$response" ]; then
               commitId=$(echo "$response" | sed -n 1p)
               reviewIds=$(echo "$response" | sed -n 2p)
@@ -52,7 +52,7 @@ jobs:
     needs: check-existing-reviews
     if: ${{ needs.check-existing-reviews.outputs.APPROVED_COMMIT_ID }}
     runs-on: ubuntu-latest
-    name: Safe check
+    name: Safe change check
     steps:
 
       - name: "Fetch PR depth"
@@ -107,7 +107,7 @@ jobs:
                   issue_number: '${{github.event.pull_request.number}}',
                   owner: '${{github.event.repository.owner.login}}',
                   repo: '${{github.event.repository.name}}',
-                  body: '🤖 SRR : Changes were not safe, revoking reviews ${{needs.check-existing-reviews.outputs.REVIEW_IDS}}'
+                  body: '🤖 SRR : Changes were not safe, revoking reviews.'
                 })
 
                 let reviews = "${{needs.check-existing-reviews.outputs.REVIEW_IDS}}".split(" ")
@@ -117,8 +117,16 @@ jobs:
                       repo: '${{github.event.repository.name}}',
                       pull_number: '${{github.event.pull_request.number}}',
                       review_id: review,
-                      message: '',
+                      message: 'Dismissed by SRR',
                       event: 'DISMISS'
                     });
                 }
             }
+
+      - name: Send analytics
+        if: ${{ steps.safe-modification-check.outputs.is-safe-change == 'true' }}
+        run: |
+          reviews='${{needs.check-existing-reviews.outputs.REVIEW_IDS}}'
+          arr_reviews=($reviews)
+          count=${#arr_reviews[@]}
+          curl --location --request POST '${{ secrets.SRR_ANALYTICS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}", "password" : "${{ secrets.SRR_API_PASSWORD }}", "existingReviewCount" : $count }'
