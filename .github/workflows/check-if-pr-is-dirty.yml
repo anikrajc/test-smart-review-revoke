@@ -117,7 +117,7 @@ jobs:
                       repo: '${{github.event.repository.name}}',
                       pull_number: '${{github.event.pull_request.number}}',
                       review_id: review,
-                      message: 'Dismissed by SRR',
+                      message: '',
                       event: 'DISMISS'
                     });
                 }
