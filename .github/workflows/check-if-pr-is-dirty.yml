@@ -134,4 +134,4 @@ jobs:
           arr_reviews=($reviews)
           count=${#arr_reviews[@]}
           echo $count
-          curl --location --request POST '${{ env.SRR_ANALYTICS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}", "password" : "${{ secrets.SRR_API_PASSWORD }}", "existingReviewCount" : "$count" }'
+          curl --location --request POST '${{ env.SRR_ANALYTICS_ENDPOINT }}' --header 'Content-Type: application/json' --data-raw '{ "organisation" : "${{github.event.repository.owner.login}}", "repository" : "${{github.event.repository.name}}", "number" : "${{github.event.pull_request.number}}", "password" : "${{ secrets.SRR_API_PASSWORD }}", "existingReviewCount" : '$count' }'
