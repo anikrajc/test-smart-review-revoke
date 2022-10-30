@@ -49,6 +49,7 @@ jobs:
             })
 
   check-if-changes-are-safe:
+    needs: check-existing-reviews
     if: ${{ needs.check-existing-reviews.outputs.APPROVED_COMMIT_ID }}
     runs-on: ubuntu-latest
     name: Safe check
