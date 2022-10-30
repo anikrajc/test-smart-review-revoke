@@ -12,9 +12,14 @@ on:
       - main
 
 jobs:
-  check-if-changes-are-safe:
+
+  check-existing-reviews:
     runs-on: ubuntu-latest
-    name: Safe check
+    name: Check existing reviews
+    outputs:
+      ERROR: ${{ steps.get-existing-reviews.outputs.ERROR }}
+      APPROVED_COMMIT_ID: ${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}
+      REVIEW_IDS: ${{ steps.get-existing-reviews.outputs.REVIEW_IDS }}
     steps:
       - name: Get existing reviews
         id: get-existing-reviews
@@ -24,7 +29,7 @@ jobs:
               commitId=$(echo "$response" | sed -n 1p)
               reviewIds=$(echo "$response" | sed -n 2p)
               echo "APPROVED_COMMIT_ID=$commitId" >> $GITHUB_OUTPUT
-              echo "REVIEW_IDS=$reviewIds" >> $GITHUB_OUTPUT=
+              echo "REVIEW_IDS=$reviewIds" >> $GITHUB_OUTPUT
           else
               errorReason="No approved reviews, quiting early."
               echo $errorReason
@@ -42,7 +47,12 @@ jobs:
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
             })
-            return 0
+
+  check-if-changes-are-safe:
+    if: ${{ jobs.check-existing-reviews.outputs.APPROVED_COMMIT_ID }}
+    runs-on: ubuntu-latest
+    name: Safe check
+    steps:
 
       - name: "Fetch PR depth"
         id: fetch-pr-depth
@@ -51,7 +61,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 1
-          ref: "${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}"
+          ref: "${{ jobs.check-existing-reviews.outputs.APPROVED_COMMIT_ID }}"
           path: old-code
 
       - uses: actions/checkout@v3
@@ -66,7 +76,7 @@ jobs:
         with:
           json: true
           path: new-code
-          base_sha: ${{ steps.get-existing-reviews.outputs.APPROVED_COMMIT_ID }}
+          base_sha: ${{ jobs.check-existing-reviews.outputs.APPROVED_COMMIT_ID }}
           sha: ${{ github.event.pull_request.head.sha }}
 
       - name: Safe modification check
@@ -79,18 +89,6 @@ jobs:
           ignore-list: "[]"
           start-marker: "test-srr-start"
           end-marker: "test-srr-end"
-
-      - name: Revoke reviews
-        if: ${{ steps.safe-modification-check.outputs.is-safe-change }} == "false"
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: '${{github.event.pull_request.number}}',
-              owner: '${{github.event.repository.owner.login}}',
-              repo: '${{github.event.repository.name}}',
-              body: '🤖 SRR : Revoking Reviews ${{ steps.get-existing-reviews.outputs.REVIEW_IDS }}. Changes were safe = ${{ steps.safe-modification-check.outputs.is-safe-change }}'
-            })
 
       - name: Send comments
         uses: actions/github-script@v6
@@ -108,6 +106,6 @@ jobs:
                   issue_number: '${{github.event.pull_request.number}}',
                   owner: '${{github.event.repository.owner.login}}',
                   repo: '${{github.event.repository.name}}',
-                  body: '🤖 SRR : Changes were not safe'
+                  body: '🤖 SRR : Changes were not safe, revoking reviews ${{jobs.check-existing-reviews.outputs.REVIEW_IDS}}'
                 })
             }
