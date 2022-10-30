@@ -42,7 +42,7 @@ jobs:
               repo: '${{github.event.repository.name}}',
               body: '🤖 SRR : ${{ steps.get-existing-reviews.outputs.ERROR }}'
             })
-            exit 0
+            return 0
 
       - name: "Fetch PR depth"
         id: fetch-pr-depth
